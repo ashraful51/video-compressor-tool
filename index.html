@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Compression Test</title>
+</head>
+<body>
+  <form id="videoUploadForm" enctype="multipart/form-data">
+    <input type="file" id="videoFile" name="video" accept="video/*" required>
+    <button type="submit">Compress Video</button>
+  </form>
+  <div id="uploadStatus"></div>
+  <video id="compressedVideo" controls style="display:none;"></video>
+  <a id="downloadLink" href="#" download style="display:none;">Download Compressed Video</a>
+
+  <script>
+    document.getElementById('videoUploadForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById('videoFile');
+      const statusDiv = document.getElementById('uploadStatus');
+      const videoElement = document.getElementById('compressedVideo');
+      const downloadLink = document.getElementById('downloadLink');
+
+      if (fileInput.files.length === 0) {
+        statusDiv.innerHTML = 'Please select a video file.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('video', fileInput.files[0]);
+
+      try {
+        statusDiv.innerHTML = 'Uploading and compressing video...';
+        const response = await fetch('http://localhost:3000/compress', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Video compression failed');
+        }
+
+        const result = await response.json();
+        const downloadUrl = result.downloadUrl;
+        videoElement.src = downloadUrl;
+        videoElement.style.display = 'block';
+        downloadLink.href = downloadUrl;
+        downloadLink.style.display = 'block';
+        statusDiv.innerHTML = 'Video compressed successfully!';
+      } catch (error) {
+        statusDiv.innerHTML = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
